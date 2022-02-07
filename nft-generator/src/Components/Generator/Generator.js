@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 const Generator = () => {
@@ -7,8 +7,14 @@ const Generator = () => {
 
     const [layers, setLayers] = useState([]);
 
-    const addLayers = () => {
-        console.log('ok')
+    const [currentLayer, setCurrentLayer] = useState('');
+
+    const inputNewLayer = useRef('')
+
+    const addLayer = () => {
+        setLayers([...layers, inputNewLayer.current.value]);
+        setCurrentLayer(inputNewLayer.current.value);
+        inputNewLayer.current.value = ''
     }
 
     return (
@@ -17,16 +23,23 @@ const Generator = () => {
                 <p className='font-bold text-xl pb-12'>Layers</p>
                 <div className='flex flex-col'>
 
-                    <div className='p-8 mb-2 bg-gray-900 rounded-lg text-white'>
-                        <h1 className='font-bold text-lg'>hi</h1>
-                    </div>
+                    {
+                        layers.map(layer => {
+                            return (
+                                <div onClick={() => setCurrentLayer(layer)} className='p-6 mb-2 bg-gray-900 rounded-lg text-white'>
+                                    <h1 className='font-bold text-lg'>{layer}</h1>
+                                </div>
+                            )
+                        })
+                    }
 
                     <div className="flex flex-row p-8 pt-4 pb-4 bg-gray-900 rounded-lg gap-4">
-                        <input type="name" className="w-full px-4 py-1 text-white focus:outline-none bg-black text-md"
-                            placeholder="Layer Name" />
+                        <input type="name" className="w-full px-4 py-1 text-white focus:outline-none bg-black text-md font-sans"
+                            placeholder='Layer Name' ref={inputNewLayer} />
 
                         <div className=''>
-                            <button onClick={() => addLayers()} className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm" >
+                            <button onClick={addLayer} 
+                            className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm" >
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -35,8 +48,9 @@ const Generator = () => {
                     
                 </div>
             </div>
-            <div className='w-full md:w-80 xl:w-96'>
-                <p className='font-bold text-xl text-center '>Display Images</p>
+            <div className='w-full md:w-80 xl:w-96 md:pl-32 '>
+                <p className='font-bold text-xl pb-12'>Display Images</p>
+                <h1>{currentLayer}</h1>
             </div>
         </div>
     )
