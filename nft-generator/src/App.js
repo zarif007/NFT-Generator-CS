@@ -5,6 +5,7 @@ import {
   Route
 } from "react-router-dom";
 import Home from './Components/Home/Home';
+import Generator from './Components/Generator/Generator';
 
 function App() {
   return (
@@ -12,7 +13,7 @@ function App() {
       <Router>
         <Routes>
           <Route path='' element={<Home />} />
-          <Route path='/generate/:generatorId' element={<Home />} />
+          <Route path='generate/:generatorId' element={<Generator />} />
         </Routes>
       </Router>
     </div>
