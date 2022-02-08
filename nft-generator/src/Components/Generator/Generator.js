@@ -78,14 +78,11 @@ const Generator = () => {
                                     {provided.placeholder}
                                 </div>
                             )}
-                            
                         </Droppable>
                     </DragDropContext>
-
                     <div className="flex flex-row pl-4 pr-4 xl:pl-8 xl:pr-8 pt-4 pb-4 bg-gray-900 rounded-lg gap-4">
                         <input type="name" className="w-full px-4 py-1 text-white focus:outline-none bg-black text-md font-sans"
                             placeholder='Layer Name' ref={inputNewLayer} />
-
                         <div className=''>
                             <button onClick={addLayer} 
                             className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm" >
@@ -105,7 +102,6 @@ const Generator = () => {
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
                 <p className='font-bold text-xl pb-12'>Display Images</p>
                 <h1 className='text-2xl font-bold'>{currentLayer.name}</h1>
-
                 <div className='flex flex-row flex-wrap'>
                     {
                         currentLayer !== '' && currentLayer.images.map(image => {
@@ -115,7 +111,6 @@ const Generator = () => {
                         })
                     }
                 </div>
-
                 {
                     currentLayer !== '' ? 
                     <div className="grid grid-cols-1 space-y-2 pt-4">
