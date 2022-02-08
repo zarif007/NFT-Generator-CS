@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-
-
-const fileTypes = ["JPG", "PNG", "GIF"];
+import { DragDropContext, Droppable, Draggable  } from 'react-beautiful-dnd';
 
 const Generator = () => {
 
@@ -39,23 +37,50 @@ const Generator = () => {
         inputNewLayer.current.value = ''
     }
 
+    const handleOnDragEnd = result => {
+        if (!result.destination) return;
+
+        const items = Array.from(layers);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
+        setLayers(items)
+    }
+
     return (
         <div className='flex flex-col md:flex-row text-white xl:p-24 xl:pt-12 md:p-8 p-4'> 
             <div className='w-full md:w-96'>
                 <p className='font-bold text-xl pb-12'>Layers</p>
                 <div className='flex flex-col'>
-
-                    {
-                        layers.map(layer => {
-                            return (
-                                <div onClick={() => setCurrentLayer(layer)} 
-                                    className='p-6 mb-2 bg-gray-900 rounded-lg text-white flex flex-row justify-between'>
-                                    <h1 className='font-bold text-lg'>{layer.name}</h1>
-                                    <p className='text-lg bg-black p-1 rounded-md pl-2 pr-2'>{layer.images.length}</p>
+                    <DragDropContext onDragEnd={handleOnDragEnd}>
+                        <Droppable droppableId='layers'>
+                            {provided => (
+                                <div {...provided.droppableProps} ref={provided.innerRef}>
+                                    {
+                                        layers.map((layer, index) => {
+                                            return (
+                                                <Draggable key={layer.id} draggableId={layer.id} index={index}>
+                                                    {
+                                                        provided => (
+                                                            <div onClick={() => setCurrentLayer(layer) } 
+                                                                className='p-6 mb-2 bg-gray-900 rounded-lg text-white flex flex-row justify-between'
+                                                                ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                                                <h1 className='font-bold text-lg'>{layer.name}</h1>
+                                                                <p className='text-lg bg-black p-1 rounded-md pl-2 pr-2'>{layer.images.length}</p>
+                                                            </div>
+                                                        )
+                                                    }
+                                                    
+                                                </Draggable>
+                                            )
+                                        })
+                                    }
+                                    {provided.placeholder}
                                 </div>
-                            )
-                        })
-                    }
+                            )}
+                            
+                        </Droppable>
+                    </DragDropContext>
 
                     <div className="flex flex-row pl-4 pr-4 xl:pl-8 xl:pr-8 pt-4 pb-4 bg-gray-900 rounded-lg gap-4">
                         <input type="name" className="w-full px-4 py-1 text-white focus:outline-none bg-black text-md font-sans"
@@ -68,9 +93,14 @@ const Generator = () => {
                             </button>
                         </div>
                     </div>
-
-                    
                 </div>
+                <button onClick={() => {
+                    const data = {
+                        generatorId,
+                        layers
+                    }
+                    console.log(data);
+                }}>generate</button>
             </div>
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
                 <p className='font-bold text-xl pb-12'>Display Images</p>
