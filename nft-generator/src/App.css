@@ -1,3 +1,10 @@
 body {
   background-color: black;
 }
+
+.iciELI {
+
+  width: 700px !important;
+  height: 100px !important;
+  border: dashed 2px #3b82f6 !important;
+}
