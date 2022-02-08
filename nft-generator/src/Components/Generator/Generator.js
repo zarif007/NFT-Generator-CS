@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-import { FileUploader } from "react-drag-drop-files";
-
 
 const fileTypes = ["JPG", "PNG", "GIF"];
 
@@ -14,24 +12,19 @@ const Generator = () => {
 
     const [currentLayer, setCurrentLayer] = useState('');
 
-    const [img, setImg] = useState('')
-
     const inputNewLayer = useRef('');
     const filePickerRef = useRef();
 
     const handleImageUpload = e => {
         const reader = new FileReader();
-        const updatedLayer = currentLayer
         if(e.target.files[0]) {
             reader.readAsDataURL(e.target.files[0]);
         }
 
         reader.onload = readerEvent => {
-            updatedLayer.images.push(readerEvent.target.result);
-            setCurrentLayer(updatedLayer)
-            console.log(currentLayer)
-        }
-        
+            setCurrentLayer({...currentLayer, ...currentLayer.images.push(readerEvent.target.result)})
+            console.log(currentLayer, layers)
+        }   
     };
 
     const addLayer = () => {
@@ -81,18 +74,33 @@ const Generator = () => {
                 <p className='font-bold text-xl pb-12'>Display Images</p>
                 <h1>{currentLayer.name}</h1>
 
-                {
-                    currentLayer !== '' && currentLayer.images.map(image => {
-                        return (
-                            <img src={image}/>
-                        )
-                    })
-                }
-                <div className='flex flex-wrap w-full pt-4' onClick={() => filePickerRef.current.click()}>
-                    Add
-                    <input type='file' onChange={handleImageUpload} ref={filePickerRef} hidden/>
+                <div className='flex flex-row flex-wrap'>
+                    {
+                        currentLayer !== '' && currentLayer.images.map(image => {
+                            return (
+                                <img src={image} className="max-h-80 object-contain p-2"/>
+                            )
+                        })
+                    }
                 </div>
 
+                {
+                    currentLayer !== '' ? 
+                    <div className="grid grid-cols-1 space-y-2 pt-4">
+                        <label className="text-sm font-bold text-gray-500 tracking-wide">Add Images</label>
+                        <div className="flex items-center justify-center w-full">
+                            <label className="flex flex-col rounded-lg border-4 border-dashed border-blue-500 w-full h-60 p-10 group text-center">
+                            <div className="h-full w-full text-center flex flex-col justify-center items-center  ">
+                                <p className="pointer-none text-gray-500 "><span className="text-sm">Drag and drop</span> files here <br /> or select a file from your computer</p>
+                            </div>
+                                <input type='file' accept="image/gif, image/jpeg, image/png, image/jpg" onChange={handleImageUpload} ref={filePickerRef} hidden />
+                            </label>
+                        </div>
+                    </div> :
+                    <h1 className='font-bold text-2xl'>Add layer</h1>
+                }
+
+                
                 
             </div>
         </div>
