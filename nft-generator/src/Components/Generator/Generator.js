@@ -48,8 +48,10 @@ const Generator = () => {
                     {
                         layers.map(layer => {
                             return (
-                                <div onClick={() => setCurrentLayer(layer)} className='p-6 mb-2 bg-gray-900 rounded-lg text-white'>
+                                <div onClick={() => setCurrentLayer(layer)} 
+                                    className='p-6 mb-2 bg-gray-900 rounded-lg text-white flex flex-row justify-between'>
                                     <h1 className='font-bold text-lg'>{layer.name}</h1>
+                                    <p className='text-lg bg-black p-1 rounded-md pl-2 pr-2'>{layer.images.length}</p>
                                 </div>
                             )
                         })
@@ -72,13 +74,13 @@ const Generator = () => {
             </div>
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
                 <p className='font-bold text-xl pb-12'>Display Images</p>
-                <h1>{currentLayer.name}</h1>
+                <h1 className='text-2xl font-bold'>{currentLayer.name}</h1>
 
                 <div className='flex flex-row flex-wrap'>
                     {
                         currentLayer !== '' && currentLayer.images.map(image => {
                             return (
-                                <img src={image} className="max-h-80 object-contain p-2"/>
+                                <img src={image} className="max-h-64 object-contain p-2"/>
                             )
                         })
                     }
@@ -98,10 +100,7 @@ const Generator = () => {
                         </div>
                     </div> :
                     <h1 className='font-bold text-2xl'>Add layer</h1>
-                }
-
-                
-                
+                }  
             </div>
         </div>
     )
