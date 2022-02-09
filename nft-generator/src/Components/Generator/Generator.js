@@ -136,9 +136,10 @@ const Generator = () => {
                     {
                         currentLayer !== '' && currentLayer.images.map(image => {
                             return (
-                                <div>
-                                    <img src={image.value} className="max-h-64 object-contain p-2"/>
-                                    <h1 className='text-white'>{image.rarity}</h1>
+                                <div className='p-2 ml-2'>
+                                    <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-70'>{image.rarity}%</span>
+                                    <img src={image.value} className="max-h-64 object-contain"/>
+                                    <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-70 ml-2'>{image.name}</span>
                                 </div>
                             )
                         })
