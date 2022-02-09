@@ -10,6 +10,8 @@ const Generator = () => {
 
     const [currentLayer, setCurrentLayer] = useState('');
 
+    const [showOptions, setShowOptions] = useState(false);
+
     const inputNewLayer = useRef('');
     const filePickerRef = useRef();
 
@@ -20,7 +22,17 @@ const Generator = () => {
         }
 
         reader.onload = readerEvent => {
-            setCurrentLayer({...currentLayer, ...currentLayer.images.push(readerEvent.target.result)})
+            const rarity = (100 / (currentLayer.images.length + 1)).toFixed(2);
+            const imageData = {
+                name: Math.random().toString(36).substr(2, 5) + '#' + rarity,
+                value: readerEvent.target.result,
+                rarity,
+            }
+            currentLayer.images.map(image => {
+                image.rarity = rarity;
+                image.name = image.name.split('#')[0] + '#' + rarity
+            })
+            setCurrentLayer({...currentLayer, ...currentLayer.images.push(imageData)});
         }   
     };
 
@@ -98,18 +110,36 @@ const Generator = () => {
                         </div>
                     </div>
                 </div>
-                <button onClick={() => generate()}
+                <button onClick={generate}
                 className='relative mt-4 bg-blue-500 hover:bg-blue-600 text-white w-full h-16 rounded text-2xl font-bold overflow-visible'>
                     Generate</button>
             </div>
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
                 <p className='font-bold text-xl pb-12'>Display Images</p>
-                <h1 className='text-2xl font-bold'>{currentLayer.name}</h1>
+                {
+                    currentLayer !== '' && (
+                        <div className='flex flex-row gap-4'>
+                            <span 
+                                className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
+                                Layer Name: <span className='text-2xl font-bold'>{currentLayer.name}</span>
+                            </span> 
+                            <button className='hover:border-blue-600 border-2 border-blue-500 text-white p-4 rounded text-lg font-bold pb-0 pt-0'
+                                onClick={() => setShowOptions(!showOptions)} >
+                                Options {showOptions ? <i class="fas fa-chevron-up"></i> : <i class="fas fa-chevron-down"></i>}
+                            </button>
+                        </div>
+                    )
+                }
+                
+                
                 <div className='flex flex-row flex-wrap'>
                     {
                         currentLayer !== '' && currentLayer.images.map(image => {
                             return (
-                                <img src={image} className="max-h-64 object-contain p-2"/>
+                                <div>
+                                    <img src={image.value} className="max-h-64 object-contain p-2"/>
+                                    <h1 className='text-white'>{image.rarity}</h1>
+                                </div>
                             )
                         })
                     }
