@@ -21,7 +21,6 @@ const Generator = () => {
 
         reader.onload = readerEvent => {
             setCurrentLayer({...currentLayer, ...currentLayer.images.push(readerEvent.target.result)})
-            console.log(currentLayer, layers)
         }   
     };
 
@@ -47,6 +46,15 @@ const Generator = () => {
         setLayers(items)
     }
 
+    const generate = () => {
+        const data = {
+            generatorId,
+            layers,
+        }
+
+        console.log(data);
+    }
+
     return (
         <div className='flex flex-col md:flex-row text-white xl:p-24 xl:pt-12 md:p-8 p-4'> 
             <div className='w-full md:w-96'>
@@ -69,8 +77,7 @@ const Generator = () => {
                                                                 <p className='text-lg bg-black p-1 rounded-md pl-2 pr-2'>{layer.images.length}</p>
                                                             </div>
                                                         )
-                                                    }
-                                                    
+                                                    }    
                                                 </Draggable>
                                             )
                                         })
@@ -85,19 +92,15 @@ const Generator = () => {
                             placeholder='Layer Name' ref={inputNewLayer} />
                         <div className=''>
                             <button onClick={addLayer} 
-                            className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm" >
+                            className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm hover:bg-blue-600" >
                                 <i className="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <button onClick={() => {
-                    const data = {
-                        generatorId,
-                        layers
-                    }
-                    console.log(data);
-                }}>generate</button>
+                <button onClick={() => generate()}
+                className='relative mt-4 bg-blue-500 hover:bg-blue-600 text-white w-full h-16 rounded text-2xl font-bold overflow-visible'>
+                    Generate</button>
             </div>
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
                 <p className='font-bold text-xl pb-12'>Display Images</p>
@@ -116,7 +119,7 @@ const Generator = () => {
                     <div className="grid grid-cols-1 space-y-2 pt-4">
                         <label className="text-sm font-bold text-gray-500 tracking-wide">Add Images</label>
                         <div className="flex items-center justify-center w-full">
-                            <label className="flex flex-col rounded-lg border-4 border-dashed border-blue-500 w-full h-60 p-10 group text-center">
+                            <label className="flex flex-col rounded-lg border-4 border-dashed border-blue-500 w-full h-40 p-10 group text-center">
                             <div className="h-full w-full text-center flex flex-col justify-center items-center  ">
                                 <p className="pointer-none text-gray-500 "><span className="text-sm">Drag and drop</span> files here <br /> or select a file from your computer</p>
                             </div>
