@@ -121,25 +121,42 @@ const Generator = () => {
                         <div className='flex flex-row gap-4'>
                             <span 
                                 className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
-                                Layer Name: <span className='text-2xl font-bold'>{currentLayer.name}</span>
+                                Layer Name: <span className='text-xl font-bold'>{currentLayer.name}</span>
                             </span> 
-                            <button className='hover:border-blue-600 border-2 border-blue-500 text-white p-4 rounded text-lg font-bold pb-0 pt-0'
+                            <button className='bg-gray-900 text-white p-4 rounded text-md font-bold pb-0 pt-0'
                                 onClick={() => setShowOptions(!showOptions)} >
-                                Options {showOptions ? <i class="fas fa-chevron-up"></i> : <i class="fas fa-chevron-down"></i>}
+                                Options {showOptions ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}
                             </button>
                         </div>
                     )
                 }
                 
+                {
+                    showOptions && <div className='bg-gray-900 p-6 rounded-md mt-6 mb-6 flex flex-row flex-wrap gap-4'>
+                        <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'>
+                            Rarity <i className="fas fa-sliders-h"></i>
+                        </button>
+                        <button className='bg-red-500 hover:bg-red-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'>
+                            Delete Layer <i className="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                }
                 
                 <div className='flex flex-row flex-wrap'>
                     {
                         currentLayer !== '' && currentLayer.images.map(image => {
                             return (
-                                <div className='p-2 ml-2'>
-                                    <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-70'>{image.rarity}%</span>
-                                    <img src={image.value} className="max-h-64 object-contain"/>
-                                    <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-70 ml-2'>{image.name}</span>
+                                <div className='p-2 ml-2 mt-2'>
+                                    <div className='-mb-8 absolute flex flex-row justify-between'>
+                                        <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.rarity}%</span>
+                                    </div>
+                                    {/* <div className='flex flex-row-reverse -mb-3 relative' onClick={() => handleDeleteImage(image.name)}>
+                                        <i className="far fa-times-circle white-black bg-gray-900 p-1 rounded-full bg-opacity-50"></i>
+                                    </div> */}
+                                    <img src={image.value} className="max-h-52 object-contain"/>
+                                    <div className='-mt-6'>
+                                        <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.name}</span>
+                                    </div>
                                 </div>
                             )
                         })
