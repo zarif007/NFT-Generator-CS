@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable  } from 'react-beautiful-dnd';
 
+
 const Generator = () => {
 
     const { generatorId } = useParams();
@@ -11,6 +12,8 @@ const Generator = () => {
     const [currentLayer, setCurrentLayer] = useState('');
 
     const [showOptions, setShowOptions] = useState(false);
+
+    const [showModal, setShowModal] = useState(false);
 
     const inputNewLayer = useRef('');
     const filePickerRef = useRef();
@@ -123,7 +126,7 @@ const Generator = () => {
                                 className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
                                 Layer Name: <span className='text-xl font-bold'>{currentLayer.name}</span>
                             </span> 
-                            <button className='bg-gray-900 text-white p-4 rounded text-md font-bold pb-0 pt-0'
+                            <button className='bg-gray-900 text-white p-3 rounded text-md font-bold'
                                 onClick={() => setShowOptions(!showOptions)} >
                                 Options {showOptions ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}
                             </button>
@@ -133,7 +136,8 @@ const Generator = () => {
                 
                 {
                     showOptions && <div className='bg-gray-900 p-6 rounded-md mt-6 mb-6 flex flex-row flex-wrap gap-4'>
-                        <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'>
+                        <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
+                            onClick={() => setShowModal(true)}>
                             Rarity <i className="fas fa-sliders-h"></i>
                         </button>
                         <button className='bg-red-500 hover:bg-red-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'>
@@ -141,6 +145,71 @@ const Generator = () => {
                         </button>
                     </div>
                 }
+
+                {
+                    showModal && (
+                        <>
+                            <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
+                                <div className="relative w-auto my-6 mx-auto max-w-full min-w-[50%]">
+                                    <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-gray-900 outline-none focus:outline-none">
+                                        <div className="flex items-start justify-between p-5 border-b border-solid border-blue-500 rounded-t">
+                                            <h3 className="text-3xl font-semibold">
+                                                Adjust Rarity
+                                            </h3>
+                                            <button
+                                                className="p-1 ml-auto bg-transparent border-0 text-white opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
+                                                onClick={() => setShowModal(false)}
+                                            >
+                                                <span className="bg-transparent text-white opacity-5 h-6 w-6 text-2xl block outline-none focus:outline-none">
+                                                    X
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <div className="relative p-6 flex-auto">
+                                            <div className='flex flex-col flex-wrap'>
+                                                {
+                                                    currentLayer.images.map(image => {
+                                                        return (
+                                                            <div className='flex flex-row flex-wrap justify-between p-3 text-lg'>
+                                                                <img src={image.value} className="max-h-12 object-contain "/>
+                                                                <h1 className='p-2 '>{image.name}</h1>
+                                                                <h1 className='p-2 '>{image.rarity}%</h1>
+                                                                <div class="flex justify-center pt-3 w-2/5">
+                                                                    <input type="range" class="appearance-none
+                                                                        w-full h-2 bg-grey rounded outline-none slider-thumb" 
+                                                                        defaultValue={12}
+                                                                        onChange={e => console.log(e.target.value)}/>
+                                                                </div>
+                                                            </div>                                                            
+                                                        )
+                                                    })
+                                                }
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-end p-6 border-t border-solid border-blue-500 rounded-b">
+                                            <button
+                                                className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                                                type="button"
+                                                onClick={() => setShowModal(false)}
+                                            >
+                                                Close
+                                            </button>
+                                            <button
+                                                className="bg-blue-500 text-white active:bg-blue-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                                                type="button"
+                                                onClick={() => setShowModal(false)}
+                                            >
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
+                        </>
+                    )
+                }
+               
                 
                 <div className='flex flex-row flex-wrap'>
                     {
