@@ -11,6 +11,8 @@ const Generator = () => {
 
     const [currentLayer, setCurrentLayer] = useState('');
 
+    const [error, setError] = useState('')
+
     const [showOptions, setShowOptions] = useState(false);
 
     const [showModal, setShowModal] = useState(false);
@@ -59,6 +61,7 @@ const Generator = () => {
     }
 
     const addLayer = () => {
+
         const id = Math.random().toString(36).substr(2, 5);
         const newLayer = {
             id,
@@ -67,6 +70,7 @@ const Generator = () => {
         }
         setLayers([...layers, newLayer]);
         setCurrentLayer(newLayer);
+        setShowOptions(false);
         inputNewLayer.current.value = ''
     }
 
@@ -123,14 +127,27 @@ const Generator = () => {
                     </DragDropContext>
                     <div className="flex flex-row pl-4 pr-4 xl:pl-8 xl:pr-8 pt-4 pb-4 bg-gray-900 rounded-lg gap-4">
                         <input type="name" className="w-full px-4 py-1 text-white focus:outline-none bg-black text-md font-sans"
-                            placeholder='Layer Name' ref={inputNewLayer} />
+                            placeholder='Layer Name' ref={inputNewLayer} onChange={() => {
+                                setError('')
+                                if(inputNewLayer.current.value.length <= 2) 
+                                    setError('layer name has to be atleast 3 character');
+                                else {
+                                    layers.map(layer => {
+                                        if(layer.name === inputNewLayer.current.value)
+                                            setError('Name already exist')
+                                    })
+                                }
+                            }} />
                         <div className=''>
                             <button onClick={addLayer} 
-                            className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm hover:bg-blue-600" >
+                            className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm hover:bg-blue-600 
+                            disabled:hover:bg-blue-200 disabled:opacity-50 disabled:cursor-default" 
+                            disabled={error !== '' || !inputNewLayer.current.value}>
                                 <i className="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
+                    <p className='p-2 text-red-500 '>{error}</p>
                 </div>
                 <button onClick={generate}
                 className='relative mt-4 bg-blue-500 hover:bg-blue-600 text-white w-full h-16 rounded text-2xl font-bold overflow-visible'>
@@ -190,7 +207,7 @@ const Generator = () => {
                                                     currentLayer.images.map(image => {
                                                         return (
                                                             <div key={image.name.split('#')[0]} className='flex flex-row flex-wrap justify-between p-3 text-lg'>
-                                                                <img src={image.value} className="max-h-12 object-contain "/>
+                                                                <img src={image.value} className="max-h-12 object-contain" alt="img"/>
                                                                 <h1 className='p-2 '>{image.name}</h1>
                                                                 <h1 className='p-2 '>{image.rarity}%</h1>
                                                                 <div className="flex justify-center pt-3 w-2/5">
@@ -227,14 +244,14 @@ const Generator = () => {
                     {
                         currentLayer !== '' && currentLayer.images.map(image => {
                             return (
-                                <div className='p-2 ml-2 mt-2'>
+                                <div className='p-2 ml-2 mt-2' key={image.name.split('#')[0]}>
                                     <div className='-mb-8 absolute flex flex-row justify-between'>
                                         <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.rarity}%</span>
                                     </div>
                                     {/* <div className='flex flex-row-reverse -mb-3 relative' onClick={() => handleDeleteImage(image.name)}>
                                         <i className="far fa-times-circle white-black bg-gray-900 p-1 rounded-full bg-opacity-50"></i>
                                     </div> */}
-                                    <img src={image.value} className="max-h-52 object-contain"/>
+                                    <img src={image.value} className="max-h-52 object-contain" alt='img'/>
                                     <div className='-mt-6'>
                                         <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.name}</span>
                                     </div>
