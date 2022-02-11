@@ -150,7 +150,9 @@ const Generator = () => {
                     <p className='p-2 text-red-500 '>{error}</p>
                 </div>
                 <button onClick={generate}
-                className='relative mt-4 bg-blue-500 hover:bg-blue-600 text-white w-full h-16 rounded text-2xl font-bold overflow-visible'>
+                className='relative mt-4 bg-blue-500 hover:bg-blue-600 text-white w-full h-16 rounded text-2xl font-bold overflow-visible
+                disabled:hover:bg-blue-200 disabled:opacity-50 disabled:cursor-default'
+                disabled={layers.length < 3}>
                     Generate</button>
             </div>
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
@@ -272,8 +274,21 @@ const Generator = () => {
                                 <input type='file' accept="image/gif, image/jpeg, image/png, image/jpg" onChange={handleImageUpload} ref={filePickerRef} hidden />
                             </label>
                         </div>
-                    </div> :
-                    <h1 className='font-bold text-2xl'>Add layer</h1>
+                    </div> : <div>
+                        <h1 className='font-bold text-2xl pb-2'>Add layers</h1>
+                        <ul role="list" class="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
+                            <li>Add atleast 3 layer</li>
+                            <ul role="list" class="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
+                                <li>Each Layer's name must be atleast 3 characters</li>
+                                <li>All layers name should be unique</li>
+                            </ul>
+                            <li>Each layer must contain atleast 1 image</li>
+                            <ul role="list" class="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
+                                <li>Allowed formates - .gif, .jpeg, .jpg, .png</li>
+                            </ul>
+                        </ul>
+                    </div>
+                    
                 }  
             </div>
         </div>
