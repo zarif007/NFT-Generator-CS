@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable  } from 'react-beautiful-dnd';
+import Swal from 'sweetalert2'
 
 
 const Generator = () => {
@@ -72,6 +73,34 @@ const Generator = () => {
         setCurrentLayer(newLayer);
         setShowOptions(false);
         inputNewLayer.current.value = ''
+    }
+
+    const deleteLayer = () => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            background: '#111827',
+            color: 'white',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setLayers([...layers.filter(layer => layer != currentLayer)]);
+                setCurrentLayer('');
+                setShowOptions(false)
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: "Deleted successfully",
+                    icon: 'success',
+                    background: '#111827',
+                    color: 'white',
+                    confirmButtonColor: '#3b82f6',
+                })
+            }
+        })
     }
 
     const handleOnDragEnd = result => {
@@ -178,7 +207,8 @@ const Generator = () => {
                             onClick={() => setShowModal(true)}>
                             Rarity <i className="fas fa-sliders-h"></i>
                         </button>
-                        <button className='bg-red-500 hover:bg-red-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'>
+                        <button className='bg-red-500 hover:bg-red-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
+                            onClick={deleteLayer}>
                             Delete Layer <i className="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -276,14 +306,14 @@ const Generator = () => {
                         </div>
                     </div> : <div>
                         <h1 className='font-bold text-2xl pb-2'>Add layers</h1>
-                        <ul role="list" class="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
+                        <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
                             <li>Add atleast 3 layer</li>
-                            <ul role="list" class="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
+                            <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
                                 <li>Each Layer's name must be atleast 3 characters</li>
                                 <li>All layers name should be unique</li>
                             </ul>
                             <li>Each layer must contain atleast 1 image</li>
-                            <ul role="list" class="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
+                            <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
                                 <li>Allowed formates - .gif, .jpeg, .jpg, .png</li>
                             </ul>
                         </ul>
