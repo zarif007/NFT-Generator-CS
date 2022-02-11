@@ -33,11 +33,30 @@ const Generator = () => {
             }
             currentLayer.images.map(image => {
                 image.rarity = rarity;
-                image.name = image.name.split('#')[0] + '#' + rarity
+                image.name = image.name.split('#')[0] + '#' + rarity;
             })
             setCurrentLayer({...currentLayer, ...currentLayer.images.push(imageData)});
         }   
     };
+
+    const handleAdjustRarity = (e, name) => {
+        const rarity = e.target.value;
+        const restRarity = ((100.0 - rarity) / (currentLayer.images.length - 1)).toFixed(2);
+        currentLayer.images.map(image => {
+            if(image.name === name){
+                image.rarity = rarity;
+                image.name = image.name.split('#')[0] + '#' + rarity;
+
+                if(parseFloat(rarity) - parseInt(rarity) === 0) 
+                    image.name += '.0';
+            } else if(image.name !== name) {
+                image.rarity = restRarity;
+                image.name = image.name.split('#')[0] + '#' + restRarity;
+            }
+        });
+
+        setCurrentLayer({...currentLayer, ...currentLayer.images});
+    }
 
     const addLayer = () => {
         const id = Math.random().toString(36).substr(2, 5);
@@ -170,15 +189,15 @@ const Generator = () => {
                                                 {
                                                     currentLayer.images.map(image => {
                                                         return (
-                                                            <div className='flex flex-row flex-wrap justify-between p-3 text-lg'>
+                                                            <div key={image.name.split('#')[0]} className='flex flex-row flex-wrap justify-between p-3 text-lg'>
                                                                 <img src={image.value} className="max-h-12 object-contain "/>
                                                                 <h1 className='p-2 '>{image.name}</h1>
                                                                 <h1 className='p-2 '>{image.rarity}%</h1>
-                                                                <div class="flex justify-center pt-3 w-2/5">
-                                                                    <input type="range" class="appearance-none
+                                                                <div className="flex justify-center pt-3 w-2/5">
+                                                                    <input type="range" className="appearance-none
                                                                         w-full h-2 bg-grey rounded outline-none slider-thumb" 
-                                                                        defaultValue={12}
-                                                                        onChange={e => console.log(e.target.value)}/>
+                                                                        defaultValue={parseFloat(image.rarity)} step={.1} max={101 - currentLayer.images.length} min={1}
+                                                                        onChange={e => handleAdjustRarity(e, image.name)}/>
                                                                 </div>
                                                             </div>                                                            
                                                         )
@@ -193,13 +212,6 @@ const Generator = () => {
                                                 onClick={() => setShowModal(false)}
                                             >
                                                 Close
-                                            </button>
-                                            <button
-                                                className="bg-blue-500 text-white active:bg-blue-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                                type="button"
-                                                onClick={() => setShowModal(false)}
-                                            >
-                                                Save Changes
                                             </button>
                                         </div>
                                     </div>
