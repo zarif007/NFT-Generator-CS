@@ -28,7 +28,7 @@ const Generator = () => {
         }
 
         reader.onload = readerEvent => {
-            const rarity = (100 / (currentLayer.images.length + 1)).toFixed(2);
+            const rarity = (100 / (currentLayer.images.length + 1)).toFixed(3);
             const imageData = {
                 name: Math.random().toString(36).substr(2, 5) + '#' + rarity,
                 value: readerEvent.target.result,
@@ -44,17 +44,26 @@ const Generator = () => {
 
     const handleAdjustRarity = (e, name) => {
         const rarity = e.target.value;
-        const restRarity = ((100.0 - rarity) / (currentLayer.images.length - 1)).toFixed(2);
+        let restRarity = 0, def = 0, maxRarity = 100;
+
         currentLayer.images.map(image => {
-            if(image.name === name){
-                image.rarity = rarity;
+            if(image.name.split('#')[0] === name.split('#')[0]){
+                def = parseFloat(image.rarity) - rarity;
+                image.rarity = rarity; 
                 image.name = image.name.split('#')[0] + '#' + rarity;
 
                 if(parseFloat(rarity) - parseInt(rarity) === 0) 
                     image.name += '.0';
-            } else if(image.name !== name) {
-                image.rarity = restRarity;
-                image.name = image.name.split('#')[0] + '#' + restRarity;
+            } else {
+                restRarity += parseFloat(image.rarity);
+            }
+        });
+
+        currentLayer.images.map(image => {
+            if(image.name.split('#')[0] !== name.split('#')[0]) {
+                image.rarity = Math.max((((parseFloat(image.rarity) / restRarity) * def) + parseFloat(image.rarity)).toFixed(3), 0.001);
+                image.name = image.name.split('#')[0] + '#' + image.rarity;
+                maxRarity -= parseFloat(image.rarity)
             }
         });
 
@@ -89,7 +98,14 @@ const Generator = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 setLayers([...layers.filter(layer => layer != currentLayer)]);
-                setCurrentLayer('');
+
+                if(layers.length === 1)
+                    setCurrentLayer('');
+                else if(layers[0] === currentLayer)
+                    setCurrentLayer(layers[1])
+                else 
+                    setCurrentLayer(layers[0])
+                    
                 setShowOptions(false)
                 Swal.fire({
                     title: 'Deleted!',
@@ -307,7 +323,7 @@ const Generator = () => {
                     </div> : <div>
                         <h1 className='font-bold text-2xl pb-2'>Add layers</h1>
                         <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
-                            <li>Add atleast 3 layer</li>
+                            <li>Add atleast 3 layers</li>
                             <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
                                 <li>Each Layer's name must be atleast 3 characters</li>
                                 <li>All layers name should be unique</li>
