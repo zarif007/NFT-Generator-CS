@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable  } from 'react-beautiful-dnd';
 import Swal from 'sweetalert2'
+import domain from './../../domain';
+import axios from 'axios';
 
 
 const Generator = () => {
@@ -18,17 +20,20 @@ const Generator = () => {
 
     const [showModal, setShowModal] = useState(false);
 
+    const [user, setUser] = useState(Math.random().toString(36).substr(2, 5));
+
     const inputNewLayer = useRef('');
     const filePickerRef = useRef();
 
     const handleImageUpload = e => {
         const reader = new FileReader();
+        console.log(e.target.files);
         if(e.target.files[0]) {
             reader.readAsDataURL(e.target.files[0]);
         }
 
         reader.onload = readerEvent => {
-            const rarity = (100 / (currentLayer.images.length + 1)).toFixed(3);
+            const rarity = (100 / (currentLayer.images.length + 1)).toFixed(2);
             const imageData = {
                 name: Math.random().toString(36).substr(2, 5) + '#' + rarity,
                 value: readerEvent.target.result,
@@ -61,7 +66,7 @@ const Generator = () => {
 
         currentLayer.images.map(image => {
             if(image.name.split('#')[0] !== name.split('#')[0]) {
-                image.rarity = Math.max((((parseFloat(image.rarity) / restRarity) * def) + parseFloat(image.rarity)).toFixed(3), 0.001);
+                image.rarity = Math.max((((parseFloat(image.rarity) / restRarity) * def) + parseFloat(image.rarity)).toFixed(2), 0.01);
                 image.name = image.name.split('#')[0] + '#' + image.rarity;
                 maxRarity -= parseFloat(image.rarity)
             }
@@ -78,6 +83,15 @@ const Generator = () => {
             name: inputNewLayer.current.value,
             images: [],
         }
+
+        const data = {
+            userName: user,
+            layer: newLayer.name,
+        };
+
+        axios.post(`${domain}createLayer`, data)
+            .then(res => console.log(res))
+
         setLayers([...layers, newLayer]);
         setCurrentLayer(newLayer);
         setShowOptions(false);
