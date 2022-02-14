@@ -22,27 +22,63 @@ const Generator = () => {
 
     const [user, setUser] = useState(Math.random().toString(36).substr(2, 5));
 
+    const [generateImages, setGenerateImages] = useState([]);
+
     const inputNewLayer = useRef('');
+    const editionCounter = useRef('');
     const filePickerRef = useRef();
 
     const handleImageUpload = e => {
         const reader = new FileReader();
-        console.log(e.target.files);
+
+        const rarity = Math.floor(100 / (currentLayer.images.length + 1));
+        const name = Math.random().toString(36).substr(2, 5) + '#' + rarity;
+
+        const data = new FormData();
+
+        data.append(name, e.target.files[0]);
+
+
+        axios.post(`${domain}uploadinFolder/${currentLayer.name}/${user}`, data)
+            .then(res => {})
+
         if(e.target.files[0]) {
             reader.readAsDataURL(e.target.files[0]);
         }
 
         reader.onload = readerEvent => {
-            const rarity = (100 / (currentLayer.images.length + 1)).toFixed(2);
+            
             const imageData = {
-                name: Math.random().toString(36).substr(2, 5) + '#' + rarity,
+                name,
                 value: readerEvent.target.result,
                 rarity,
             }
+
+            let prevNames = [], currentNames = [];
+
+            currentLayer.images.map(image => {
+                prevNames.push(image.name + '.png');
+            })
+
             currentLayer.images.map(image => {
                 image.rarity = rarity;
                 image.name = image.name.split('#')[0] + '#' + rarity;
             })
+
+            currentLayer.images.map(image => {
+                currentNames.push(image.name + '.png');
+            })
+
+            const data = {
+                oldNames: prevNames,
+                newNames: currentNames,
+                userName: user,
+                layer: currentLayer.name,
+            }
+
+            axios.post(`${domain}renamefiles`, data)
+                .then(res => {})
+            
             setCurrentLayer({...currentLayer, ...currentLayer.images.push(imageData)});
         }   
     };
@@ -51,14 +87,18 @@ const Generator = () => {
         const rarity = e.target.value;
         let restRarity = 0, def = 0, maxRarity = 100;
 
+        let prevNames = [], currentNames = [];
+
+        currentLayer.images.map(image => {
+            prevNames.push(image.name + '.png');
+        })
+
         currentLayer.images.map(image => {
             if(image.name.split('#')[0] === name.split('#')[0]){
                 def = parseFloat(image.rarity) - rarity;
-                image.rarity = rarity; 
-                image.name = image.name.split('#')[0] + '#' + rarity;
+                image.rarity = Math.floor(rarity); 
+                image.name = image.name.split('#')[0] + '#' + Math.floor(rarity);
 
-                if(parseFloat(rarity) - parseInt(rarity) === 0) 
-                    image.name += '.0';
             } else {
                 restRarity += parseFloat(image.rarity);
             }
@@ -66,11 +106,27 @@ const Generator = () => {
 
         currentLayer.images.map(image => {
             if(image.name.split('#')[0] !== name.split('#')[0]) {
-                image.rarity = Math.max((((parseFloat(image.rarity) / restRarity) * def) + parseFloat(image.rarity)).toFixed(2), 0.01);
+                 const imageRarity = Math.max((((parseFloat(image.rarity) / restRarity) * def) + 
+                    parseFloat(image.rarity)).toFixed(2), 1);
+                image.rarity = Math.floor(imageRarity);
                 image.name = image.name.split('#')[0] + '#' + image.rarity;
                 maxRarity -= parseFloat(image.rarity)
             }
         });
+
+        currentLayer.images.map(image => {
+            currentNames.push(image.name + '.png');
+        });
+
+        const data = {
+            oldNames: prevNames,
+            newNames: currentNames,
+            userName: user,
+            layer: currentLayer.name,
+        }
+
+        axios.post(`${domain}renamefiles`, data)
+            .then(res => {})
 
         setCurrentLayer({...currentLayer, ...currentLayer.images});
     }
@@ -90,7 +146,7 @@ const Generator = () => {
         };
 
         axios.post(`${domain}createLayer`, data)
-            .then(res => console.log(res))
+            .then(res => {})
 
         setLayers([...layers, newLayer]);
         setCurrentLayer(newLayer);
@@ -144,12 +200,26 @@ const Generator = () => {
     }
 
     const generate = () => {
-        const data = {
-            generatorId,
-            layers,
-        }
 
-        console.log(data);
+        let arr = [];
+
+        layers.map(layer => {
+            arr.push(layer.name);
+        });
+
+        const data = {
+            arr, 
+            editioncount: parseInt(editionCounter.current.value),
+            userName: user,
+            description: 'des',
+            namePrefix: 'ape',
+        }
+        
+        axios.post(`${domain}generate`, data)
+            .then(res => {
+                setGenerateImages(res.data[0].image);
+                setCurrentLayer('');
+            });
     }
 
     return (
@@ -199,38 +269,70 @@ const Generator = () => {
                             }} />
                         <div className=''>
                             <button onClick={addLayer} 
-                            className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm hover:bg-blue-600 
-                            disabled:hover:bg-blue-200 disabled:opacity-50 disabled:cursor-default" 
-                            disabled={error !== '' || !inputNewLayer.current.value}>
+                                className="flex items-center bg-blue-500 justify-center w-12 h-12 text-white rounded-sm hover:bg-blue-600 
+                                disabled:hover:bg-blue-200 disabled:opacity-50 disabled:cursor-default" 
+                                disabled={error !== '' || !inputNewLayer.current.value}>
                                 <i className="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
                     <p className='p-2 text-red-500 '>{error}</p>
                 </div>
-                <button onClick={generate}
-                className='relative mt-4 bg-blue-500 hover:bg-blue-600 text-white w-full h-16 rounded text-2xl font-bold overflow-visible
-                disabled:hover:bg-blue-200 disabled:opacity-50 disabled:cursor-default'
-                disabled={layers.length < 3}>
-                    Generate</button>
-            </div>
-            <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
-                <p className='font-bold text-xl pb-12'>Display Images</p>
+
                 {
-                    currentLayer !== '' && (
-                        <div className='flex flex-row gap-4'>
-                            <span 
-                                className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
-                                Layer Name: <span className='text-xl font-bold'>{currentLayer.name}</span>
-                            </span> 
-                            <button className='bg-gray-900 text-white p-3 rounded text-md font-bold'
-                                onClick={() => setShowOptions(!showOptions)} >
-                                Options {showOptions ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}
-                            </button>
+                    layers.length >= 3 && (
+                        <div className="flex flex-row pl-1 pr-1 xl:pl-6 xl:pr-8 pt-4 pb-4 bg-gray-900 rounded-lg gap-3 h-16 justify-between">
+                            <input type="name" className="w-full px-2 py-1 text-white focus:outline-none bg-black text-md font-sans"
+                                placeholder='Edition Count' ref={editionCounter} onChange={() => {
+                                    setError('');
+                                    
+                                    let maxCount = 1;
+                                    layers.map(layer => {
+                                        maxCount *= (layer.images.length);
+                                    });
+
+                                    if(editionCounter.current.value > maxCount)
+                                        setError(`Edition out of bound, max for these layers ${maxCount}`)
+                                    
+                                }} />
                         </div>
                     )
                 }
+
                 
+                <button onClick={generate}
+                    className='relative mt-4 bg-blue-500 hover:bg-blue-600 text-white w-full h-16 rounded text-2xl font-bold overflow-visible
+                    disabled:hover:bg-blue-200 disabled:opacity-50 disabled:cursor-default'
+                    disabled={layers.length < 3 || error}>
+                    Generate
+                </button>
+            </div>
+            <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
+                <p className='font-bold text-xl pb-12'>Display Images</p>
+                    <div className='flex flex-row gap-4'>
+                    {
+                        currentLayer !== '' && (
+                            <div>
+                                <span 
+                                    className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
+                                    Layer Name: <span className='text-xl font-bold'>{currentLayer.name}</span>
+                                </span> 
+                                <button className='bg-gray-900 text-white p-3 rounded text-md font-bold'
+                                    onClick={() => setShowOptions(!showOptions)} >
+                                    Options {showOptions ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}
+                                </button>
+                                {
+                                    generateImages.length !== 0 && <button className='bg-blue-500 hover:bg-blue-600 text-white p-3 rounded text-md font-bold'
+                                        onClick={() => setCurrentLayer('')}>
+                                        Gallery <i className="fas fa-image"></i>
+                                    </button>
+                                }
+                            </div>
+                        )
+                    }
+                    
+                    </div>
+
                 {
                     showOptions && <div className='bg-gray-900 p-6 rounded-md mt-6 mb-6 flex flex-row flex-wrap gap-4'>
                         <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
@@ -275,7 +377,7 @@ const Generator = () => {
                                                                 <div className="flex justify-center pt-3 w-2/5">
                                                                     <input type="range" className="appearance-none
                                                                         w-full h-2 bg-grey rounded outline-none slider-thumb" 
-                                                                        defaultValue={parseFloat(image.rarity)} step={.1} max={101 - currentLayer.images.length} min={1}
+                                                                        defaultValue={parseFloat(image.rarity)} step={1} max={101 - currentLayer.images.length} min={1}
                                                                         onChange={e => handleAdjustRarity(e, image.name)}/>
                                                                 </div>
                                                             </div>                                                            
@@ -331,9 +433,19 @@ const Generator = () => {
                             <div className="h-full w-full text-center flex flex-col justify-center items-center  ">
                                 <p className="pointer-none text-gray-500 "><span className="text-sm">Drag and drop</span> files here <br /> or select a file from your computer</p>
                             </div>
-                                <input type='file' accept="image/gif, image/jpeg, image/png, image/jpg" onChange={handleImageUpload} ref={filePickerRef} hidden />
+                                <input type='file' accept="image/png" onChange={handleImageUpload} ref={filePickerRef} hidden />
                             </label>
                         </div>
+                    </div> : (generateImages.length !== 0 ? <div className='flex flex-row flex-wrap'>
+                        {
+                            generateImages.map(image => {
+                                return(
+                                    <div className='p-2 ml-2 mt-2'>
+                                        <img src={image} className="max-h-52 object-contain" alt='img'/>
+                                    </div>
+                                )
+                            })
+                        }
                     </div> : <div>
                         <h1 className='font-bold text-2xl pb-2'>Add layers</h1>
                         <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
@@ -344,10 +456,10 @@ const Generator = () => {
                             </ul>
                             <li>Each layer must contain atleast 1 image</li>
                             <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
-                                <li>Allowed formates - .gif, .jpeg, .jpg, .png</li>
+                                <li>Allowed formates - .png</li>
                             </ul>
                         </ul>
-                    </div>
+                    </div>)
                     
                 }  
             </div>
