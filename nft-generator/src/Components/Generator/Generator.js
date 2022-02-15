@@ -22,10 +22,12 @@ const Generator = () => {
 
     const [user, setUser] = useState(Math.random().toString(36).substr(2, 5));
 
-    const [generateImages, setGenerateImages] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [generateImages, setGenerateImages] = useState({});
 
     const inputNewLayer = useRef('');
-    const editionCounter = useRef('');
+    const editionCounter = useRef(1);
     const filePickerRef = useRef();
 
     const handleImageUpload = e => {
@@ -202,6 +204,8 @@ const Generator = () => {
     const generate = () => {
 
         let arr = [];
+        setGenerateImages({});
+
 
         layers.map(layer => {
             arr.push(layer.name);
@@ -211,15 +215,21 @@ const Generator = () => {
             arr, 
             editioncount: parseInt(editionCounter.current.value),
             userName: user,
-            description: 'des',
-            namePrefix: 'ape',
+            description: Math.random().toString(36).substr(2, 5),
+            namePrefix: Math.random().toString(36).substr(2, 5),
         }
+
+        setIsLoading(true);
         
         axios.post(`${domain}generate`, data)
             .then(res => {
-                setGenerateImages(res.data[0].image);
+                console.log(res.data[0]);
                 setCurrentLayer('');
-            });
+                setShowOptions(false);
+                setGenerateImages(res.data[0]);
+                setIsLoading(false);
+                console.log('ser', generateImages)
+            })
     }
 
     return (
@@ -309,10 +319,9 @@ const Generator = () => {
             </div>
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
                 <p className='font-bold text-xl pb-12'>Display Images</p>
-                    <div className='flex flex-row gap-4'>
                     {
                         currentLayer !== '' && (
-                            <div>
+                            <div className='flex flex-row gap-4'>
                                 <span 
                                     className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
                                     Layer Name: <span className='text-xl font-bold'>{currentLayer.name}</span>
@@ -331,8 +340,6 @@ const Generator = () => {
                         )
                     }
                     
-                    </div>
-
                 {
                     showOptions && <div className='bg-gray-900 p-6 rounded-md mt-6 mb-6 flex flex-row flex-wrap gap-4'>
                         <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
@@ -436,9 +443,9 @@ const Generator = () => {
                                 <input type='file' accept="image/png" onChange={handleImageUpload} ref={filePickerRef} hidden />
                             </label>
                         </div>
-                    </div> : (generateImages.length !== 0 ? <div className='flex flex-row flex-wrap'>
+                    </div> : isLoading ? <div>loading</div> : (generateImages.length !== 0 ? <div className='flex flex-row flex-wrap'>
                         {
-                            generateImages.map(image => {
+                            generateImages.image.map(image => {
                                 return(
                                     <div className='p-2 ml-2 mt-2'>
                                         <img src={image} className="max-h-52 object-contain" alt='img'/>
@@ -446,7 +453,7 @@ const Generator = () => {
                                 )
                             })
                         }
-                    </div> : <div>
+                    </div>: <div>
                         <h1 className='font-bold text-2xl pb-2'>Add layers</h1>
                         <ul role="list" className="marker:text-blue-500 list-disc pl-5 space-y-3 text-slate-400">
                             <li>Add atleast 3 layers</li>
@@ -460,7 +467,6 @@ const Generator = () => {
                             </ul>
                         </ul>
                     </div>)
-                    
                 }  
             </div>
         </div>
