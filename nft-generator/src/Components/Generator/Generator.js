@@ -4,6 +4,8 @@ import { DragDropContext, Droppable, Draggable  } from 'react-beautiful-dnd';
 import Swal from 'sweetalert2'
 import domain from './../../domain';
 import axios from 'axios';
+import imageToBase64 from 'image-to-base64/browser';
+import Loading from '../Loading/Loading';
 
 
 const Generator = () => {
@@ -24,7 +26,7 @@ const Generator = () => {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const [generateImages, setGenerateImages] = useState({});
+    const [generateImages, setGenerateImages] = useState([]);
 
     const inputNewLayer = useRef('');
     const editionCounter = useRef(1);
@@ -204,7 +206,7 @@ const Generator = () => {
     const generate = () => {
 
         let arr = [];
-        setGenerateImages({});
+        setGenerateImages([]);
 
 
         layers.map(layer => {
@@ -223,12 +225,33 @@ const Generator = () => {
         
         axios.post(`${domain}generate`, data)
             .then(res => {
-                console.log(res.data[0]);
                 setCurrentLayer('');
                 setShowOptions(false);
-                setGenerateImages(res.data[0]);
+                let newArray = [];
+
+                res.data[0].image.map(image => {
+                    const data = {
+                        id: Math.random().toString(36).substr(2, 5),
+                        url: image,
+                    };
+
+                    imageToBase64(image) 
+                        .then(
+                            (response) => {
+                                console.log('response'); 
+                            }
+                        )
+                        .catch(
+                            (error) => {
+                                console.log(error);
+                            }
+                        )
+
+                    newArray.push(data);
+                })
+                
+                setGenerateImages(newArray);
                 setIsLoading(false);
-                console.log('ser', generateImages)
             })
     }
 
@@ -443,12 +466,12 @@ const Generator = () => {
                                 <input type='file' accept="image/png" onChange={handleImageUpload} ref={filePickerRef} hidden />
                             </label>
                         </div>
-                    </div> : isLoading ? <div>loading</div> : (generateImages.length !== 0 ? <div className='flex flex-row flex-wrap'>
+                    </div> : isLoading ? <Loading /> : (generateImages.length !== 0 ? <div className='flex flex-row flex-wrap'>
                         {
-                            generateImages.image.map(image => {
+                            generateImages.map(image => {
                                 return(
-                                    <div className='p-2 ml-2 mt-2'>
-                                        <img src={image} className="max-h-52 object-contain" alt='img'/>
+                                    <div key={image.id} className='p-2 ml-2 mt-2'>
+                                        <img src={image.url} className="max-h-52 object-contain" alt='img'/>
                                     </div>
                                 )
                             })
