@@ -342,7 +342,7 @@ const Generator = () => {
                 </button>
             </div>
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
-                <p className='font-bold text-xl pb-12'>Display Images</p>
+                <p className='font-bold text-xl pb-12'>Display Images </p>
                     {
                         currentLayer !== '' && (
                             <div className='flex flex-row gap-4'>
