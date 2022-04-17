@@ -1,3 +1,3 @@
-const domain = 'http://localhost:3333/';
+const domain = 'http://localhost:9001/';
 
 export default domain;

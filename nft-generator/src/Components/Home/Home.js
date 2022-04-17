@@ -1,19 +1,28 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { LoginContext } from '../../Contexts/LoginContext';
+import NavBar from '../NavBar/NavBar';
 
 const uuid = require("uuid");
 
 const Home = () => {
 
     const navigate = useNavigate();
+    const { user } = useContext(LoginContext)
+
+    console.log(user)
 
     const sendToGeneratePage = () => {
         const generatorId = uuid.v4();
-        navigate(`/generate/${generatorId}`)
+        console.log(user.userName)
+        navigate(`/generate/${generatorId}`);
+
     } 
 
     return (
-        <section className="py-20 lg:py-28 bg-[black] h-full">
+        <>
+            <NavBar />
+            <section className="py-2 lg:py-8 bg-[black] h-full">
                 <div className="container mx-auto px-5 text-center">
                     <div className="mb-16">
                         <div className="space-y-4 mb-12">
@@ -25,6 +34,7 @@ const Home = () => {
                     <img className="mx-auto xl:max-w-screen-lg mb-28 rounded-md" src="https://media.giphy.com/media/E3y79zUo2V4v8AFG2V/giphy.gif" alt="Monster"/>
                 </div>
             </section>
+        </>
     )
 }
 

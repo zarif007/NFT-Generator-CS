@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useContext, useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable  } from 'react-beautiful-dnd';
 import Swal from 'sweetalert2'
 import domain from './../../domain';
@@ -7,6 +7,8 @@ import axios from 'axios';
 import imageToBase64 from 'image-to-base64/browser';
 import Loading from '../Loading/Loading';
 import DefaultInstruction from '../DefaultInstruction/DefaultInstruction';
+import { LoginContext } from '../../Contexts/LoginContext';
+import fileDownload from 'js-file-download';
 
 
 const Generator = () => {
@@ -23,7 +25,7 @@ const Generator = () => {
 
     const [showModal, setShowModal] = useState(false);
 
-    const [user, setUser] = useState(Math.random().toString(36).substr(2, 5));
+    const [userName, setUserName] = useState('');
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -32,6 +34,19 @@ const Generator = () => {
     const inputNewLayer = useRef('');
     const editionCounter = useRef(1);
     const filePickerRef = useRef();
+
+    const navigate = useNavigate();
+
+    const { user } = useContext(LoginContext);
+    
+    useEffect(() => {
+        console.log(user)
+        if(user.userName === undefined)
+            navigate(`/login`);
+        else
+            setUserName(user.userName);
+    }, [])
+        
 
     const handleImageUpload = e => {
         const reader = new FileReader();
@@ -43,8 +58,7 @@ const Generator = () => {
 
         data.append(name, e.target.files[0]);
 
-
-        axios.post(`${domain}uploadinFolder/${currentLayer.name}/${user}`, data)
+        axios.post(`${domain}uploadinFolder/${currentLayer.name}/${userName}`, data)
             .then(res => {})
 
         if(e.target.files[0]) {
@@ -77,7 +91,7 @@ const Generator = () => {
             const data = {
                 oldNames: prevNames,
                 newNames: currentNames,
-                userName: user,
+                userName,
                 layer: currentLayer.name,
             }
 
@@ -126,7 +140,7 @@ const Generator = () => {
         const data = {
             oldNames: prevNames,
             newNames: currentNames,
-            userName: user,
+            userName,
             layer: currentLayer.name,
         }
 
@@ -146,7 +160,7 @@ const Generator = () => {
         }
 
         const data = {
-            userName: user,
+            userName,
             layer: newLayer.name,
         };
 
@@ -173,6 +187,11 @@ const Generator = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 setLayers([...layers.filter(layer => layer != currentLayer)]);
+                let data = {
+                    "userName":user,
+                    "layer": currentLayer.name
+                }
+                axios.post(`${domain}deleteLayer`, data).then(res => {});
 
                 if(layers.length === 1)
                     setCurrentLayer('');
@@ -194,6 +213,7 @@ const Generator = () => {
         })
     }
 
+
     const handleOnDragEnd = result => {
         if (!result.destination) return;
 
@@ -202,6 +222,22 @@ const Generator = () => {
         items.splice(result.destination.index, 0, reorderedItem);
 
         setLayers(items)
+    }
+
+    const downloadImages = () => {
+        axios({
+            url: `${domain}downloadZip/${user.name}`,
+            method: 'GET',
+        })
+        .then((response) => {
+                const url = response.data.zipUrl;
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `${user.name}.zip`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+        })
     }
 
     const generate = () => {
@@ -217,7 +253,7 @@ const Generator = () => {
         const data = {
             arr, 
             editioncount: parseInt(editionCounter.current.value),
-            userName: user,
+            userName,
             description: Math.random().toString(36).substr(2, 5),
             namePrefix: Math.random().toString(36).substr(2, 5),
         }
@@ -327,7 +363,6 @@ const Generator = () => {
 
                                     if(editionCounter.current.value > maxCount)
                                         setError(`Edition out of bound, max for these layers ${maxCount}`)
-                                    
                                 }} />
                         </div>
                     )
@@ -341,144 +376,160 @@ const Generator = () => {
                     Generate
                 </button>
             </div>
+
+
             <div className='w-full md:pl-12 xl:pl-32 pt-12 md:pt-0'>
                 <p className='font-bold text-xl pb-12'>Display Images </p>
-                    {
-                        currentLayer !== '' && (
-                            <div className='flex flex-row gap-4'>
-                                <span 
-                                    className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
-                                    Layer Name: <span className='text-xl font-bold'>{currentLayer.name}</span>
-                                </span> 
-                                <button className='bg-gray-900 text-white p-3 rounded text-md font-bold'
-                                    onClick={() => setShowOptions(!showOptions)} >
-                                    Options {showOptions ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}
-                                </button>
-                                {
-                                    generateImages.length !== 0 && <button className='bg-blue-500 hover:bg-blue-600 text-white p-3 rounded text-md font-bold'
-                                        onClick={() => setCurrentLayer('')}>
-                                        Gallery <i className="fas fa-image"></i>
+                {isLoading ? <Loading /> : (
+                    <>
+                        {
+                            currentLayer !== '' && (
+                                <div className='flex flex-row gap-4'>
+                                    <span 
+                                        className='text-md font-bold bg-gray-900 p-3 rounded-md mb-2'>
+                                        Layer Name: <span className='text-xl font-bold'>{currentLayer.name}</span>
+                                    </span> 
+                                    <button className='bg-gray-900 text-white p-3 rounded text-md font-bold'
+                                        onClick={() => setShowOptions(!showOptions)} >
+                                        Options {showOptions ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}
                                     </button>
-                                }
-                            </div>
-                        )
-                    }
-                    
-                {
-                    showOptions && <div className='bg-gray-900 p-6 rounded-md mt-6 mb-6 flex flex-row flex-wrap gap-4'>
-                        <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
-                            onClick={() => setShowModal(true)}>
-                            Rarity <i className="fas fa-sliders-h"></i>
-                        </button>
-                        <button className='bg-red-500 hover:bg-red-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
-                            onClick={deleteLayer}>
-                            Delete Layer <i className="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                }
-
-                {
-                    showModal && (
-                        <>
-                            <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
-                                <div className="relative w-auto my-6 mx-auto max-w-full min-w-[50%]">
-                                    <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-gray-900 outline-none focus:outline-none">
-                                        <div className="flex items-start justify-between p-5 border-b border-solid border-blue-500 rounded-t">
-                                            <h3 className="text-3xl font-semibold">
-                                                Adjust Rarity
-                                            </h3>
-                                            <button
-                                                className="p-1 ml-auto bg-transparent border-0 text-white opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
-                                                onClick={() => setShowModal(false)}
-                                            >
-                                                <span className="bg-transparent text-white opacity-5 h-6 w-6 text-2xl block outline-none focus:outline-none">
-                                                    X
-                                                </span>
-                                            </button>
-                                        </div>
-                                        <div className="relative p-6 flex-auto">
-                                            <div className='flex flex-col flex-wrap'>
-                                                {
-                                                    currentLayer.images.map(image => {
-                                                        return (
-                                                            <div key={image.name.split('#')[0]} className='flex flex-row flex-wrap justify-between p-3 text-lg'>
-                                                                <img src={image.value} className="max-h-12 object-contain" alt="img"/>
-                                                                <h1 className='p-2 '>{image.name}</h1>
-                                                                <h1 className='p-2 '>{image.rarity}%</h1>
-                                                                <div className="flex justify-center pt-3 w-2/5">
-                                                                    <input type="range" className="appearance-none
-                                                                        w-full h-2 bg-grey rounded outline-none slider-thumb" 
-                                                                        defaultValue={parseFloat(image.rarity)} step={1} max={101 - currentLayer.images.length} min={1}
-                                                                        onChange={e => handleAdjustRarity(e, image.name)}/>
-                                                                </div>
-                                                            </div>                                                            
-                                                        )
-                                                    })
-                                                }
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-end p-6 border-t border-solid border-blue-500 rounded-b">
-                                            <button
-                                                className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                                type="button"
-                                                onClick={() => setShowModal(false)}
-                                            >
-                                                Close
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
-                        </>
-                    )
-                }
-               
-                
-                <div className='flex flex-row flex-wrap'>
-                    {
-                        currentLayer !== '' && currentLayer.images.map(image => {
-                            return (
-                                <div className='p-2 ml-2 mt-2' key={image.name.split('#')[0]}>
-                                    <div className='-mb-8 absolute flex flex-row justify-between'>
-                                        <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.rarity}%</span>
-                                    </div>
-                                    {/* <div className='flex flex-row-reverse -mb-3 relative' onClick={() => handleDeleteImage(image.name)}>
-                                        <i className="far fa-times-circle white-black bg-gray-900 p-1 rounded-full bg-opacity-50"></i>
-                                    </div> */}
-                                    <img src={image.value} className="max-h-52 object-contain" alt='img'/>
-                                    <div className='-mt-6'>
-                                        <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.name}</span>
-                                    </div>
+                                    {
+                                        generateImages.length !== 0 && <button className='bg-blue-500 hover:bg-blue-600 text-white p-3 rounded text-md font-bold'
+                                            onClick={() => setCurrentLayer('')}>
+                                            Gallery <i className="fas fa-image"></i>
+                                        </button>
+                                    }
                                 </div>
                             )
-                        })
-                    }
-                </div>
-                {
-                    currentLayer !== '' ? 
-                    <div className="grid grid-cols-1 space-y-2 pt-4">
-                        <label className="text-sm font-bold text-gray-500 tracking-wide">Add Images</label>
-                        <div className="flex items-center justify-center w-full">
-                            <label className="flex flex-col rounded-lg border-4 border-dashed border-blue-500 w-full h-40 p-10 group text-center">
-                            <div className="h-full w-full text-center flex flex-col justify-center items-center  ">
-                                <p className="pointer-none text-gray-500 "><span className="text-sm">Drag and drop</span> files here <br /> or select a file from your computer</p>
-                            </div>
-                                <input type='file' accept="image/png" onChange={handleImageUpload} ref={filePickerRef} hidden />
-                            </label>
-                        </div>
-                    </div> : isLoading ? <Loading /> : (generateImages.length !== 0 ? <div className='flex flex-row flex-wrap'>
-                        {
-                            generateImages.map(image => {
-                                return(
-                                    <div key={image.id} className='p-2 ml-2 mt-2'>
-                                        <img src={image.url} className="max-h-52 object-contain" alt='img'/>
-                                    </div>
-                                )
-                            })
                         }
-                    </div> : <DefaultInstruction />)
-                }  
+                            
+                        {
+                            showOptions && <div className='bg-gray-900 p-6 rounded-md mt-6 mb-6 flex flex-row flex-wrap gap-4'>
+                                <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
+                                    onClick={() => setShowModal(true)}>
+                                    Rarity <i className="fas fa-sliders-h"></i>
+                                </button>
+                                <button className='bg-red-500 hover:bg-red-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
+                                    onClick={deleteLayer}>
+                                    Delete Layer <i className="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        }
+
+                        {
+                            showModal && (
+                                <>
+                                    <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
+                                        <div className="relative w-auto my-6 mx-auto max-w-full min-w-[50%]">
+                                            <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-gray-900 outline-none focus:outline-none">
+                                                <div className="flex items-start justify-between p-5 border-b border-solid border-blue-500 rounded-t">
+                                                    <h3 className="text-3xl font-semibold">
+                                                        Adjust Rarity
+                                                    </h3>
+                                                    <button
+                                                        className="p-1 ml-auto bg-transparent border-0 text-white opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
+                                                        onClick={() => setShowModal(false)}
+                                                    >
+                                                        <span className="bg-transparent text-white opacity-5 h-6 w-6 text-2xl block outline-none focus:outline-none">
+                                                            X
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                                <div className="relative p-6 flex-auto">
+                                                    <div className='flex flex-col flex-wrap'>
+                                                        {
+                                                            currentLayer.images.map(image => {
+                                                                return (
+                                                                    <div key={image.name.split('#')[0]} className='flex flex-row flex-wrap justify-between p-3 text-lg'>
+                                                                        <img src={image.value} className="max-h-12 object-contain" alt="img"/>
+                                                                        <h1 className='p-2 '>{image.name}</h1>
+                                                                        <h1 className='p-2 '>{image.rarity}%</h1>
+                                                                        <div className="flex justify-center pt-3 w-2/5">
+                                                                            <input type="range" className="appearance-none
+                                                                                w-full h-2 bg-grey rounded outline-none slider-thumb" 
+                                                                                defaultValue={parseFloat(image.rarity)} step={1} max={101 - currentLayer.images.length} min={1}
+                                                                                onChange={e => handleAdjustRarity(e, image.name)}/>
+                                                                        </div>
+                                                                    </div>                                                            
+                                                                )
+                                                            })
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-end p-6 border-t border-solid border-blue-500 rounded-b">
+                                                    <button
+                                                        className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                                                        type="button"
+                                                        onClick={() => setShowModal(false)}
+                                                    >
+                                                        Close
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
+                                </>
+                            )
+                        }
+                    
+                        
+                        <div className='flex flex-row flex-wrap'>
+                            {
+                                currentLayer !== '' && currentLayer.images.map(image => {
+                                    return (
+                                        <div className='p-2 ml-2 mt-2' key={image.name.split('#')[0]}>
+                                            <div className='-mb-8 absolute flex flex-row justify-between'>
+                                                <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.rarity}%</span>
+                                            </div>
+                                            {/* <div className='flex flex-row-reverse -mb-3 relative' onClick={() => handleDeleteImage(image.name)}>
+                                                <i className="far fa-times-circle white-black bg-gray-900 p-1 rounded-full bg-opacity-50"></i>
+                                            </div> */}
+                                            <img src={image.value} className="max-h-52 object-contain" alt='img'/>
+                                            <div className='-mt-6'>
+                                                <span className='text-white bg-gray-900 p-1 rounded-sm bg-opacity-50'>{image.name}</span>
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            }
+                        </div>
+                        {
+                            currentLayer !== '' ? 
+                            <div className="grid grid-cols-1 space-y-2 pt-4">
+                                <label className="text-sm font-bold text-gray-500 tracking-wide">Add Images</label>
+                                <div className="flex items-center justify-center w-full">
+                                    <label className="flex flex-col rounded-lg border-4 border-dashed border-blue-500 w-full h-40 p-10 group text-center">
+                                    <div className="h-full w-full text-center flex flex-col justify-center items-center  ">
+                                        <p className="pointer-none text-gray-500 "><span className="text-sm">Drag and drop</span> files here <br /> or select a file from your computer</p>
+                                    </div>
+                                        <input type='file' accept="image/png" onChange={handleImageUpload} ref={filePickerRef} hidden />
+                                    </label>
+                                </div>
+                            </div> : generateImages.length !== 0 ? 
+                            <>
+                                <div className='rounded-md mt-2 mb-2 flex flex-row flex-wrap gap-4'>
+                                    <button className='bg-blue-500 hover:bg-blue-600 text-white p-6 rounded text-md font-bold pb-2 pt-2'
+                                        onClick={downloadImages}>
+                                        Download <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                                <div className='flex flex-row flex-wrap'>
+                                    {
+                                        generateImages.map(image => {
+                                            return(
+                                                <div key={image.id} className='p-2 ml-2 mt-2'>
+                                                    <img src={image.url} className="max-h-52 object-contain" alt='img'/>
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div> 
+                            </> : <DefaultInstruction />
+                        }
+                    </>
+                )}
+                  
             </div>
         </div>
     )
